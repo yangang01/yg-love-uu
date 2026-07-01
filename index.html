@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For UU</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #030305;
+            overflow: hidden;
+            font-family: 'SF Mono', Consolas, 'Courier New', monospace;
+        }
+
+        /* 终端打字机界面 */
+        #terminal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 800px;
+            color: #00ff00;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            z-index: 50;
+            pointer-events: none;
+            transition: opacity 1.5s ease-out;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 1.1rem;
+            background-color: #00ff00;
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+        }
+
+        /* 核心文案 */
+        #text-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #fff;
+            pointer-events: none;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 3s ease-in;
+        }
+
+        .name-box {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 5rem;
+            font-weight: 900;
+            letter-spacing: 8px;
+            color: transparent;
+            -webkit-text-stroke: 2px #ff2a75;
+            text-shadow: 0 0 20px rgba(255, 42, 117, 0.5);
+            margin-bottom: 20px;
+            animation: breathe 3s infinite alternate;
+        }
+
+        .message {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 1.2rem;
+            letter-spacing: 6px;
+            color: #a0d8ef;
+            text-shadow: 0 0 10px rgba(160, 216, 239, 0.6);
+            font-weight: 300;
+        }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes breathe {
+            0% { text-shadow: 0 0 20px rgba(255, 42, 117, 0.4); transform: scale(1); }
+            100% { text-shadow: 0 0 50px rgba(255, 42, 117, 0.9), 0 0 80px rgba(255, 42, 117, 0.6); transform: scale(1.02); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="terminal">
+        <div id="typewriter"></div>
+        <span class="cursor"></span>
+    </div>
+
+    <div id="text-container">
+        <div class="name-box">Dear UU</div>
+        <div class="message">代码可以被重构，但对你的偏向是底层逻辑</div>
+    </div>
+
+    <canvas id="plexus"></canvas>
+
+    <script>
+        // -------------------------
+        // 1. 终端启动序列 (隐藏的专属浪漫)
+        // -------------------------
+       const terminalLines = [
+            // 真实的终端用户名和项目路径，用 bun 和 turbo 启动
+            "yangang@MacBook-Pro:~/projects/petdex$ bun run dev --turbo",
+            "▲ Compiling with Turbopack (Next.js 16.2.4)...",
+            "✓ Environment variables loaded. Ready in 12ms",
+            
+            // 穿插你日常可能接触的业务或底层基建（假装屏蔽了工作，只为她运行）
+            "> Connecting to Omni ecosystem [Alpha/DOP]... [Bypassed]",
+            "> Initializing AntV X6 canvas rendering engine... [OK]",
+            
+            // 融入生活元素：那只6个月大的小流浪猫
+            "> Waking up 6-month-old stray cat module... Meow! [OK]",
+            
+            // 情感注入环节
+            "> Establishing quantum connection to target: UU",
+            "> Bypassing logic, injecting emotion...",
+            "> Launching heart_plexus.vue..."
+        ];
+
+        let lineIndex = 0;
+        let charIndex = 0;
+        const typeWriterEl = document.getElementById('typewriter');
+        const terminalEl = document.getElementById('terminal');
+        const textContainer = document.getElementById('text-container');
+
+        function typeLine() {
+            if (lineIndex < terminalLines.length) {
+                const currentLine = terminalLines[lineIndex];
+                if (charIndex < currentLine.length) {
+                    typeWriterEl.innerHTML += currentLine.charAt(charIndex);
+                    charIndex++;
+                    // 随机打字速度，模拟真实感
+                    setTimeout(typeLine, Math.random() * 30 + 20);
+                } else {
+                    typeWriterEl.innerHTML += '<br><br>';
+                    lineIndex++;
+                    charIndex = 0;
+                    setTimeout(typeLine, 400); // 行与行之间的停顿
+                }
+            } else {
+                // 终端结束，引爆 Canvas 星云
+                setTimeout(() => {
+                    terminalEl.style.opacity = 0;
+                    setTimeout(() => {
+                        terminalEl.remove();
+                        startCanvasAnimation();
+                        textContainer.style.opacity = 1; // 浪漫文案浮现
+                    }, 1500);
+                }, 800);
+            }
+        }
+
+        // 启动打字机
+        setTimeout(typeLine, 1000);
+
+
+        // -------------------------
+        // 2. 高级 Canvas 星云/物理引擎
+        // -------------------------
+        const canvas = document.getElementById('plexus');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+        const PARTICLE_COUNT = 250; // 降低数量，保证 O(N^2) 连线计算流畅
+        const CONNECTION_DISTANCE = 4500; // 连线的距离阈值 (平方值提升性能)
+
+        let mouse = { x: -1000, y: -1000, isDown: false };
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // 交互监听
+        window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+        window.addEventListener('touchmove', e => { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; });
+        window.addEventListener('mouseout', () => { mouse.x = -1000; mouse.y = -1000; });
+        
+        // 点击引发爆炸冲击波
+        window.addEventListener('mousedown', () => { mouse.isDown = true; explodeParticles(); });
+        window.addEventListener('touchstart', () => { mouse.isDown = true; explodeParticles(); });
+        window.addEventListener('mouseup', () => mouse.isDown = false);
+        window.addEventListener('touchend', () => mouse.isDown = false);
+
+        const heartPoints = [];
+        for (let t = 0; t < Math.PI * 2; t += 0.05) {
+            let x = 16 * Math.pow(Math.sin(t), 3);
+            let y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+            heartPoints.push({ x, y });
+        }
+
+        class Node {
+            constructor() {
+                const targetPoint = heartPoints[Math.floor(Math.random() * heartPoints.length)];
+                this.baseX = targetPoint.x;
+                this.baseY = targetPoint.y;
+                
+                // 初始从屏幕外飞入
+                this.x = (Math.random() - 0.5) * width * 3;
+                this.y = (Math.random() - 0.5) * height * 3;
+                
+                this.vx = 0;
+                this.vy = 0;
+                this.friction = 0.88; // 空气阻力
+                this.springFactor = Math.random() * 0.02 + 0.01; // 回弹系数
+                this.size = Math.random() * 2 + 0.5;
+                
+                // 赋予一点随机游走漂浮的属性
+                this.angle = Math.random() * Math.PI * 2;
+                this.wanderSpeed = Math.random() * 0.05 + 0.02;
+                this.wanderRadius = Math.random() * 15 + 5;
+            }
+
+            update(scale) {
+                const targetX = width / 2 + this.baseX * scale;
+                const targetY = height / 2 + this.baseY * scale;
+
+                // 游走偏移量（让爱心看起来像是在水底呼吸）
+                this.angle += this.wanderSpeed;
+                const wanderX = targetX + Math.cos(this.angle) * this.wanderRadius;
+                const wanderY = targetY + Math.sin(this.angle) * this.wanderRadius;
+
+                // 鼠标排斥力
+                let dx = this.x - mouse.x;
+                let dy = this.y - mouse.y;
+                let distSq = dx * dx + dy * dy;
+                if (distSq < 15000) { // 鼠标半径
+                    let force = (15000 - distSq) / 15000;
+                    this.vx += (dx / Math.sqrt(distSq)) * force * 15; // 强烈排斥
+                    this.vy += (dy / Math.sqrt(distSq)) * force * 15;
+                }
+
+                // 弹簧引力：向目标位置拉扯
+                this.vx += (wanderX - this.x) * this.springFactor;
+                this.vy += (wanderY - this.y) * this.springFactor;
+
+                // 阻尼减速
+                this.vx *= this.friction;
+                this.vy *= this.friction;
+
+                this.x += this.vx;
+                this.y += this.vy;
+            }
+        }
+
+        // 爆炸函数：给所有粒子一个极大的随机外向速度
+        function explodeParticles() {
+            particles.forEach(p => {
+                const angle = Math.random() * Math.PI * 2;
+                const force = Math.random() * 100 + 50; // 爆炸强度
+                p.vx += Math.cos(angle) * force;
+                p.vy += Math.sin(angle) * force;
+            });
+        }
+
+        function startCanvasAnimation() {
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                particles.push(new Node());
+            }
+            animate();
+        }
+
+        function animate() {
+            ctx.fillStyle = '#030305'; // 不留拖尾，保持线条清晰
+            ctx.fillRect(0, 0, width, height);
+
+            const scale = Math.min(width, height) / 50 + Math.sin(Date.now() * 0.003) * 1.5;
+
+            // 1. 更新坐标
+            particles.forEach(p => p.update(scale));
+
+            // 2. 绘制星云连线 (O(N^2) 复杂度，所以限制了粒子数量)
+            ctx.lineWidth = 0.6;
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                for (let j = i + 1; j < PARTICLE_COUNT; j++) {
+                    const p1 = particles[i];
+                    const p2 = particles[j];
+                    const dx = p1.x - p2.x;
+                    const dy = p1.y - p2.y;
+                    const distSq = dx * dx + dy * dy;
+
+                    if (distSq < CONNECTION_DISTANCE) {
+                        // 距离越近，线条越不透明且偏向亮粉色
+                        const opacity = 1 - (distSq / CONNECTION_DISTANCE);
+                        ctx.strokeStyle = `rgba(255, 42, 117, ${opacity * 0.8})`;
+                        ctx.beginPath();
+                        ctx.moveTo(p1.x, p1.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // 3. 绘制节点本身
+            particles.forEach(p => {
+                ctx.fillStyle = `rgba(255, 255, 255, 0.8)`;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            requestAnimationFrame(animate);
+        }
+    </script>
+</body>
+</html>
